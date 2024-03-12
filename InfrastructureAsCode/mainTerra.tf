@@ -58,6 +58,17 @@ resource "azurerm_sql_server" "sql" {
   }
 }
 
+resource "azurerm_sql_database" "db" {
+    name                = "AzureDB"
+    resource_group_name = azurerm_resource_group.rg.name
+    location            = azurerm_resource_group.rg.location
+    server_name         = azurerm_sql_server.sql.name
+    edition             = "Standard"
+    collation           = "SQL_Latin1_General_CP1_CI_AS"
+    max_size_bytes      = "1073741824"
+    create_mode         = "Default"
+}
+
 output "application_name" {
   value = azurerm_app_service.app_service_app.name
 }

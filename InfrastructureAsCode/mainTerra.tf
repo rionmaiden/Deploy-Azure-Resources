@@ -52,6 +52,7 @@ resource "azurerm_sql_server" "sql" {
   resource_group_name          = azurerm_resource_group.rg.name
   administrator_login          = local.sql_administrator_username
   administrator_login_password = local.sql_administrator_password
+  version                      = "12.0"
   tags = {
       environment = "production"
   }

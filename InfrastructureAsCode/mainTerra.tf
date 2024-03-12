@@ -9,10 +9,13 @@ provider "azurerm" {
 }
 
 locals {
-  resourceGroupName   = "${random_string.rs.result}-rg"
+  resourceGroupName  = "${random_string.rs.result}-rg"
   webAppName         = "${random_string.rs.result}-${var.environment}"
   appServicePlanName = "${random_string.rs.result}-plan"
+  sqlServerName      = "${random_string.rs.result}-sql"
   sku                = "S1"
+  sql_administrator_username = "superadmin"
+  sql_administrator_password = "${random_string.rs.result}123!"
 }
 
 resource "random_string" "rs" {
@@ -41,6 +44,17 @@ resource "azurerm_app_service" "app_service_app" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   app_service_plan_id = azurerm_app_service_plan.app_service_plan.id
+}
+
+resource "azurerm_sql_server" "sql" {
+  name                         = local.sqlServerName
+  location                     = azurerm_resource_group.rg.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  administrator_login          = local.sql_administrator_username
+  administrator_login_password = local.sql_administrator_password
+  tags = {
+      environment = "production"
+  }
 }
 
 output "application_name" {

@@ -1,7 +1,7 @@
 variable "environment" {
   description = "Environment of the web app"
   type        = string
-  default     = "app"
+  default     = "dev"
 }
 
 provider "azurerm" {

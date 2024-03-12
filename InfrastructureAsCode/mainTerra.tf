@@ -79,5 +79,4 @@ output "application_url" {
 
 output "sql_server_connection_string" {
     value = "Server=tcp:${azurerm_sql_server.sql.fully_qualified_domain_name},1433;Initial Catalog=${azurerm_sql_database.db.name};Persist Security Info=False;User ID=${azurerm_sql_server.sql.administrator_login};Password={administrator_password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
-    sensitive = true
 }

@@ -18,18 +18,96 @@ This is a configuration file for Visual Studio Code's Dev Containers, located in
 
 ## Prerequisites
 
-- Azure account
+- Azure account 
 - GitHub account
 - Terraform installed
-- Visual Studio Code with Dev Containers extension installed
+- GitHub Codepsaces or Visual Studio Code 
 
 ## Usage
 
-1. Clone the repository.
-2. Open the project in Visual Studio Code.
-3. Rebuild the Dev Container to ensure all extensions are installed.
-4. Update the `mainTerra.tf` file with your desired infrastructure.
-5. Run the GitHub Actions workflow to deploy your infrastructure.
+1. Fork the repository.
+2. Create a Service Principal (see instructions below).
+3. Set up repository secrets, under Settings tab, Security - Secrets and variables - Actions (see instructions below).
+4. Execute the workflow under Actions tab, Workflows - Deploy with Terraform.
+5. When the workflow is completed, check that the new resources are created in the Azure subscription. 
+
+
+## Creating a Service Principal in Azure and Integrating it with GitHub Actions for Terraform Workflows 
+To get the service principal (needed for Terraform – added to azure pipeline) 
+
+### List your Azure subscriptions
+To begin, you'll need to list all your Azure subscriptions to identify which one you want to use for your Terraform operations. Open your terminal or command prompt and use the Azure CLI to execute the following command:
+
+```
+az account list --output table
+```
+This command will display a table listing all your Azure subscriptions, including their names and subscription IDs.
+![az-account-list](./images/az-account-list.jpg)
+
+### Set Your Active Subscription:
+After identifying the subscription you wish to use from the list (and if you have multiple subscriptions), set it as your active subscription by replacing your-subscription-id with the actual subscription ID:
+```
+az account set --subscription your-subscription-id
+```
+This will configure your Azure CLI to use the specified subscription for subsequent commands.
+
+### Create a Service Principal:
+Next, create a service principal for Azure Resource Manager. This service principal will be used by Terraform to manage resources in your Azure subscription. Replace your-service-principal-name with a name you choose for your service principal:
+```
+az ad sp create-for-rbac --name your-service-principal-name
+```
+Example:
+```
+az ad sp create-for-rbac --name ado-terraform-service-pn
+```
+The command will output a JSON object containing the appId, displayName, password, and tenant. Note these down as you will need them later.
+![service-principal](./images/service-principal.jpg)
+
+### Assign Role to Service Principal:
+To grant the necessary permissions to your service principal, assign it a role. Typically, the "Contributor" role is sufficient for Terraform to manage resources. Replace [appId] with your service principal's appId and [Subscription ID] with your subscription ID:
+```
+az role assignment create --assignee [appId] --role Contributor --scope /subscriptions/[Subscription ID]
+```
+![service-principal-scope](./images/service-principal-scope.jpg)
+
+### Configure GitHub Actions:
+To use the service principal within GitHub Actions, you need to create a secret that contains your Azure credentials. Format your credentials as follows, replacing placeholders with the actual values you obtained when creating the service principal:
+```
+{
+  "clientId": "YOUR_APP_ID",
+  "clientSecret": "YOUR_PASSWORD",
+  "subscriptionId": "YOUR_SUBSCRIPTION_ID",
+  "tenantId": "YOUR_TENANT_ID"
+}
+```
+* clientId: This is the Application (client) ID of the service principal.
+* clientSecret: The secret/password generated for your service principal.
+* subscriptionId: The ID of the Azure subscription you're using.
+* tenantId: The directory (tenant) ID.
+
+### Add Azure Credentials to GitHub Repository Secrets:
+* Navigate to your GitHub repository, go to Settings > Secrets.
+* Click on 'New repository secret'.
+* Name your secret AZURE_CREDENTIALS and paste the JSON credentials you formatted in the previous step.
+* Click 'Add secret' to save it.
+ 
+### Use Azure Credentials in GitHub Actions Workflow:
+In your GitHub Actions workflow file, use the AZURE_CREDENTIALS secret to authenticate with Azure. Here is an example of how to set up the Azure login step in your workflow:
+
+```
+steps:
+- uses: actions/checkout@v2
+
+- name: Azure Login
+  uses: azure/login@v1
+  with:
+    creds: ${{ secrets.AZURE_CREDENTIALS }}
+```
+![azure-credentials](./images/Azure-Credentials.jpg)
+
+After logging in, you can add subsequent steps in your workflow to execute Terraform commands or other Azure CLI commands to manage your Azure resources.
+
+By following these steps, you've successfully created a service principal in Azure, assigned it the necessary permissions, and configured your GitHub Actions workflow to use these credentials to manage Azure resources through Terraform or other tools.
 
 ## Contributing
 

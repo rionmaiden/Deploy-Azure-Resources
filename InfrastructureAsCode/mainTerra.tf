@@ -13,7 +13,7 @@ locals {
   webAppName         = "${random_string.rs.result}-${var.environment}"
   appServicePlanName = "${random_string.rs.result}-plan"
   sqlServerName      = "${lower(random_string.rs.result)}-sql"
-  sku                = "S1"
+  sku                = "F1"
   sql_administrator_username = "superadmin"
   sql_administrator_password = "${random_string.rs.result}123!"
 }
